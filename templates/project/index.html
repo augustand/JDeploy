@@ -1,0 +1,56 @@
+{% extends "../base.html" %}
+
+{% block title %}home{% end %}
+
+
+{% block body %}
+
+{% module Sidebar() %}
+
+{% module Menubar() %}
+
+
+<div class="pusher">
+    <div class="ui grid container">
+        <div class="introduction">
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+            <div class="ui hidden divider"></div>
+        </div>
+
+        <div class="row">
+            <div class="stretched column">
+                <button onclick="$('.ui.modal').modal('show');" class="ui yellow button">添加项目</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="column">
+                <div class="ui vertical stripe quote segment">
+                    <div class="ui three stackable doubling cards">
+                        {% for project in projects %}
+                        <a class="ui card" href="/project?id={{ project.get("id") }}">
+                            <div class="header">
+                                <i class="paw icon"></i>
+                                {{ project.get("name") }}
+                                <i class="paw icon"></i>
+                            </div>
+                            <div class="content">
+                                <div class="header">{{ project.get("name") }}</div>
+                                <div class="description">
+                                    {{ project.get("description","项目描述") }}
+                                </div>
+                            </div>
+                        </a>
+                        {% end %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% end %}
+

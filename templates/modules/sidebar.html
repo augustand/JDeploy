@@ -1,0 +1,54 @@
+<!-- Sidebar Menu -->
+
+<div class="ui vertical accordion sidebar menu left">
+    <a href="/" class="active item">Home</a>
+    {% for name in names %}
+    <div class="item">
+        <a class="title">
+            <i class="dropdown icon"></i>
+            {{ name.get("name") }}
+        </a>
+        <div class="content">
+            <div class="grouped fields">
+                <div class="field">
+                    <a data-tab>X-Large</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% end %}
+
+    <button onclick="$('.ui.modal').modal('show');" class="ui yellow button">添加项目</button>
+</div>
+
+{#<div class="ui black big launch right attached fixed button">#}
+{#    <i class="content icon"></i>#}
+{#    <span class="text">Menu</span>#}
+{#</div>#}
+
+
+<div class="ui modal">
+    <i class="close icon"></i>
+    <div class="header">
+        添加项目
+    </div>
+
+    <div class="content">
+        <form class="ui form" method="POST" action="/project">
+            <div class="field">
+                <label>Project Name</label>
+                <input type="text" name="name" placeholder="Project Name">
+            </div>
+            <div class="field">
+                <label>host_group</label>
+                <input type="text" name="host_group" placeholder="host_group">
+            </div>
+            <div class="field">
+                <label>description</label>
+                <textarea type="text" name="description" placeholder="description"></textarea>
+            </div>
+            <button class="ui button" type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
