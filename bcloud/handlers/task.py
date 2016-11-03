@@ -4,7 +4,6 @@ import uuid
 import tablib
 from pony.orm import db_session, select, commit
 from tornado import web
-from tornado.escape import json_encode
 
 from bcloud.model import Task
 
@@ -99,6 +98,7 @@ class TaskHandler(web.RequestHandler):
                 name=_name,
                 content=_content,
                 project=_project,
+                group="host",
             )
             commit()
             self.redirect("/task")
@@ -108,7 +108,8 @@ class TaskHandler(web.RequestHandler):
         with db_session:
             Task[_id].delete()
 
-        self.write(json_encode({"result": "ok"}))
+        self.write("ok")
+        # self.write(json_encode({"result": "ok"}))
 
     @web.asynchronous
     def put(self, _id):

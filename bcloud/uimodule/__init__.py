@@ -32,8 +32,8 @@ class MenubarModule(web.UIModule):
             {"name": "Home", "url": "/"},
             {"name": "Project", "url": "/project"},
             {"name": "Host", "url": "/host"},
+            {"name": "Env", "url": "/host/env"},
             {"name": "Task", "url": "/task"},
-            {"name": "About", "url": "/about"},
         ]
 
         return self.render_string("modules/menubar.html", menus=_data)

@@ -1,5 +1,6 @@
 # coding:utf-8
 import os
+import traceback
 
 from tornado import web
 from tornado.httpserver import HTTPServer
@@ -29,6 +30,10 @@ class Application(web.Application):
 
         from bcloud.handlers.websocket import BCloudSocketHandler
         from bcloud.handlers.project import ProjectHandler
+
+        from bcloud.handlers.websocket import WSocketHandler
+        from sockjs.tornado import SockJSRouter
+
         handlers = [
             (r"/", MainHandler),
             (r"/host", HostHandler),
@@ -39,6 +44,7 @@ class Application(web.Application):
             (r"/task/?(.*)", TaskHandler),
             (r"/ws", BCloudSocketHandler),
         ]
+        handlers += SockJSRouter(WSocketHandler, '/ws').urls
 
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -61,23 +67,27 @@ class Application(web.Application):
 if __name__ == "__main__":
     parse_command_line()
 
+    app = Application()
+    # wsgi_app = wsgi.WSGIAdapter(app)
+
     loop = IOLoop.instance()
 
     print "http://{}:{}".format("localhost", 8888)
 
-    HTTPServer(Application()).listen(8888)
+    HTTPServer(app).listen(8888)
     try:
+        # server = gevent.wsgi.WSGIServer(('', 8888), wsgi_app, debug=True)
+        # server.serve_forever()
         # loop.add_callback(webbrowser.open, url)
         loop.start()
     except KeyboardInterrupt:
-        print(" Shutting down on SIGINT")
+        print(" Shutting down on SIGINT!")
+        loop.stop()
+        traceback.format_exc()
     finally:
-        loop.close()
+        pass
 
 
-        # IOLoop.current().start()
-
-
-
-
-        # IOLoop.current().start()
+# loop.close()
+# IOLoop.current().start()
+# IOLoop.current().start()

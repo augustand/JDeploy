@@ -34,7 +34,8 @@ class Task(db.Entity):
     id = PrimaryKey(str)
     name = Required(str)
     content = Optional(str)
-    project = Required(str)
+    project = Optional(str)
+    group = Required(str)
 
 
 db.generate_mapping(create_tables=True)

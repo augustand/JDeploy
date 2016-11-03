@@ -28,16 +28,19 @@ class HostHandler(web.RequestHandler):
 
         if args:
             _id = args[0]
-            with db_session:
-                h = Host[_id]
-                self.write({
-                    "id": h.id,
-                    "name": h.name,
-                    "ip": h.ip,
-                    "port": h.port,
-                    "group": h.group,
-                    "password": h.password,
-                })
+            if _id == 'env':
+                self.render("host/env.html")
+            else:
+                with db_session:
+                    h = Host[_id]
+                    self.write({
+                        "id": h.id,
+                        "name": h.name,
+                        "ip": h.ip,
+                        "port": h.port,
+                        "group": h.group,
+                        "password": h.password,
+                    })
         else:
             with db_session:
                 data = tablib.Dataset(

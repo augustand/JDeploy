@@ -11,36 +11,243 @@
 
 
 <div class="pusher">
-
-    <div class="ui container">
-        <div class="introduction">
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-            <div class="ui hidden divider"></div>
-        </div>
-    </div>
-
     <div class="ui container center">
-        <div class="ui three stackable doubling cards">
-            {% for project in projects %}
-            <a class="ui card" href="/project?id={{ project.get("id") }}">
-                <div class="header">
-                    {{ project.get("name") }}
+        <div class="ui hidden divider"></div>
+        <div class="ui hidden divider"></div>
+        <div class="ui hidden divider"></div>
+        <div class="ui hidden divider"></div>
+
+        <div class="ui segment">
+            <div class="ui top attached inverted header">
+                {{ project.name }}
+            </div>
+
+            <div class="ui segment">
+                <div class="ui header">
+                    description
                 </div>
                 <div class="content">
-{#                    <div class="header">{{ project.get("name") }}</div>#}
-                    <div class="description">
-                        {{ project.get("description","项目描述") }}
-                    </div>
+                    <a class="ui red tag label">
+                        {{ project.description }}
+                    </a>
                 </div>
-            </a>
-            {% end %}
+            </div>
+
+            <div class="ui segment">
+                <div class="ui header">
+                    host_group
+                </div>
+                <div class="content">
+                    {% for hg in project.host_group.split(" ") %}
+                    <a class="ui red tag label">
+                        {{ hg }}
+                    </a>
+                    {% end %}
+                </div>
+            </div>
+
+
+            <div class="ui segment">
+                <div class="ui header">
+                    host_names
+                </div>
+                <div class="content">
+                    {% for hn in project.host_names.split(" ") %}
+                    <a class="ui red tag label">
+                        {{ hn }}
+                    </a>
+                    {% end %}
+                </div>
+            </div>
+
+            <div class="ui segment">
+                <div class="ui header">
+                    tasks
+                </div>
+                <div class="content">
+                    {% for ht in project.tasks.split(" ") %}
+                    <a class="ui red label" onclick=clict('{{ project.id }}','{{ ht }}')>
+                        <i class="hand pointer icon"></i>
+                        {{ ht }}
+                    </a>
+                    {% end %}
+                </div>
+            </div>
+
+
+            <div class="ui header">
+                <button onclick="$('.ui.modal.project.add').modal('show');" class="ui blue button">添加项目</button>
+                <button onclick="onDelete('/project/{{ project.id }}')" class="ui red button">删除
+                </button>
+                <button onclick="onUpdate('/project/{{ project.id }}');"
+                        class="ui yellow button">
+                    修改
+                </button>
+                <button onclick="onCopy('/project/{{ project.id }}');" class="ui pink button">
+                    复制
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<div class="ui modal project add">
+    <i class="close icon"></i>
+    <div class="header">
+        添加项目
+    </div>
+
+    <div class="content">
+        <form class="ui form" method="POST" action="/project">
+            <div class="field">
+                <label>Project Name</label>
+                <input type="text" name="name" placeholder="Project Name">
+            </div>
+            <div class="field">
+                <label>host_group</label>
+                <input type="text" name="host_group" placeholder="host_group">
+            </div>
+            <div class="field">
+                <label>host_names</label>
+                <input type="text" name="host_names" placeholder="host_names">
+            </div>
+            <div class="field">
+                <label>tasks</label>
+                <input type="text" name="tasks" placeholder="tasks">
+            </div>
+
+            <div class="field">
+                <label>description</label>
+                <textarea type="text" name="description" placeholder="description"></textarea>
+            </div>
+            <button class="ui button" type="submit">Submit</button>
+        </form>
+    </div>
 </div>
 
+<div class="ui modal project update">
+    <i class="close icon"></i>
+    <div class="header">
+        添加项目
+    </div>
+
+    <div class="content">
+        <form class="ui form">
+            <div class="field">
+                <label>Project Name</label>
+                <input type="text" name="name" placeholder="Project Name">
+            </div>
+            <div class="field">
+                <label>host_group</label>
+                <input type="text" name="host_group" placeholder="host_group">
+            </div>
+            <div class="field">
+                <label>host_names</label>
+                <input type="text" name="host_names" placeholder="host_names">
+            </div>
+            <div class="field">
+                <label>tasks</label>
+                <input type="text" name="tasks" placeholder="tasks">
+            </div>
+
+            <div class="field">
+                <label>description</label>
+                <textarea type="text" name="description" placeholder="description"></textarea>
+            </div>
+        </form>
+        <div class="header">
+            <button class="ui button" onclick='onUpdateSubmit()'>Submit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onDelete(url) {
+        $.ajax({
+            type: "DELETE",
+            url: url,
+            context: document.body,
+            success: function (data) {
+                console.log(data);
+                window.location.href = "/project";
+                {#                $(this).addClass("done");#}
+            }
+        }).done(function () {
+            $(this).addClass("done");
+        });
+    }
+
+    function onUpdate(url) {
+        $('.ui.modal.project.update').modal('show');
+
+        $.ajax({
+            type: "GET",
+            url: url + "?data_type=json",
+            context: document.body,
+            success: function (t) {
+                $('.ui.modal.project.update input[name=name]').val(t.name);
+                $('.ui.modal.project.update input[name=host_group]').val(t.host_group);
+                $('.ui.modal.project.update input[name=host_names]').val(t.host_names);
+                $('.ui.modal.project.update input[name=tasks]').val(t.tasks);
+                $('.ui.modal.project.update  textarea').val(t.description);
+            }
+        }).done(function () {
+        });
+        $('.ui.modal.project.update').attr("action", url);
+    }
+    function onUpdateSubmit() {
+        task = $('.ui.modal.project.update');
+        $.ajax({
+            type: "PATCH",
+            url: task.attr("action") + "?" + $('.ui.modal.project.update form').serialize(),
+            context: document.body,
+            success: function (data) {
+                if (data == "ok") {
+                    window.location.href = task.attr("action")
+                } else {
+                    window.location.href = "/project"
+                }
+            }
+        }).done(function () {
+            task.modal('hide')
+            task.attr("action", disable);
+        });
+    }
+
+    function onCopy(url) {
+        $.ajax({
+            type: "PUT",
+            url: url,
+            context: document.body,
+            success: function (data) {
+                if (data == "ok") {
+                    window.location.href = "/project"
+                } else {
+                    window.location.href = "/"
+                }
+            }
+        }).done(function () {
+        });
+    }
+
+    var ws = withSockJS("/ws", function (ws) {
+        ws.on("open", function (msg) {
+            console.log("open");
+            ws.emit("echo", "open");
+        }).on("hello", function (msg) {
+            console.log(msg);
+        }).on("echo", function (msg) {
+            ws.emit("hello", JSON.stringify({
+                "taskId": taskId,
+                "projectId": projectId,
+            }));
+        });
+    });
+
+    function clict() {
+        console.log("open");
+        ws.emit("echo", "hello");
+    }
+</script>
 {% end %}
 

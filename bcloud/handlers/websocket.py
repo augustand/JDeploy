@@ -1,9 +1,34 @@
 # -*- coding:utf-8-*-
 
 import paramiko
+from tornado.escape import json_encode
 from tornado.websocket import WebSocketHandler
 
-from plugins.log import logger
+from bcloud.handlers.sockjsExt import BaseSockJSConnection, event
+
+
+class WSocketHandler(BaseSockJSConnection):
+    @event
+    def open(self, info):
+        print info.path
+        print info.path.split("/", 3)[1]
+
+        print self._events
+
+    @event
+    def close(self):
+        print self._events
+        print "close"
+
+    @event
+    def hello(self, msg):
+        self.emit("hello", "kokokok")
+        print msg
+        return msg
+
+    @event
+    def echo(self, msg):
+        print msg
 
 
 class BCloudSocketHandler(WebSocketHandler):
@@ -16,17 +41,6 @@ class BCloudSocketHandler(WebSocketHandler):
     _ssh = paramiko.SSHClient()
     _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    # tran = paramiko.Transport(('192.168.101.237', 22,))
-    # tran.start_client()
-    # tran.auth_password('barry', '123456')
-    #
-    # 打开一个通道
-    # chan = tran.open_session()
-    # 获取一个终端
-    # chan.get_pty()
-    # 激活器
-    # chan.invoke_shell('xterm')
-
     def get_compression_options(self):
         return {}
 
@@ -37,26 +51,29 @@ class BCloudSocketHandler(WebSocketHandler):
         self.channel.setblocking(False)
         self.channel.settimeout(0.0)
 
+        self.write_message("client open ok....")
+
     def on_close(self):
         pass
 
-    @classmethod
-    def update_cache(cls, chat):
-        cls.cache.append(chat)
-        if len(cls.cache) > cls.cache_size:
-            cls.cache = cls.cache[-cls.cache_size:]
-
-    @classmethod
-    def send_updates(cls, chat):
-        logger.info("sending message to %d waiters", len(cls.waiters))
-        for waiter in cls.waiters:
-            try:
-                waiter.write_message(chat)
-            except:
-                logger.error("Error sending message", exc_info=True)
+    def hello(self):
+        pass
 
     def on_message(self, message):
-        print repr(message)
+        print message
+
+        name = message.get("name", "")
+
+        if not name:
+            self.write_message(json_encode({
+                "name": "error",
+                "data": {
+                    "msg": "name is null"
+                }
+            }))
+        else:
+            print self.__dict__
+            data = message.get("data", "")
 
         if message == u'0\r':
             print "sent"
