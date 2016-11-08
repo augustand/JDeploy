@@ -37,8 +37,9 @@ while True:
             print e.message
             pass
     if sys.stdin in readable:
-        inp = sys.stdin.readline()
-        chan.sendall(inp)
+        inp = sys.stdin.read(1)
+        print repr(inp)
+        chan.send(inp)
 
 chan.close()
 tran.close()

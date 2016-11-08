@@ -42,24 +42,27 @@
 
     </div>
 </div>
-<script type="application/javascript">
+<script>
     var ws = withSockJS("/term", function (ws) {
         ws.on("open", function (msg) {
-            ws.emit("conn", JSON.stringify({
-                "hostname": "{{ h.ip }}",
-                "port": "{{ h.port }}",
-                "username": "{{ h.name }}",
-                "password": "{{ h.password }}"
-            }));
-
             ws.term = new Terminal(80, 60, function (key) {
-                ws.emit("data", JSON.stringify({'data': key}));
+                ws.emit("data", key, function (msg) {
+                    console.log(msg);
+                });
             });
             ws.term.open();
             $('.terminal').detach().appendTo('#term');
             ws.term.resize(80, 30);
 
-            console.log("open");
+            ws.emit("conn", JSON.stringify({
+                "hostname": "{{ h.ip }}",
+                "port": "{{ h.port }}",
+                "username": "{{ h.name }}",
+                "password": "{{ h.password }}"
+            }), function (msg) {
+                ws.term.write(msg);
+                ws.emit("data", '\r');
+            });
         }).on("error", function (msg) {
             console.log(msg);
             ws.term.write('Error: ' + msg + '\r\n');
@@ -68,9 +71,9 @@
             console.log(msg);
             ws.term.write('Connection Reset By Peer');
         }).on("data", function (msg) {
+            console.log(msg);
             ws.term.write(msg);
         });
     });
 </script>
-
 {% end %}

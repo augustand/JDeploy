@@ -118,22 +118,11 @@ class WSocketHandler(BaseSockJSConnection):
             rt.add_hosts(data.dict).e(task.replace("\r", ""))
 
 
-
-
-
-            # a = select(
-            #     h for h in Host for p in Project if h.group == p.host_group or h.name in p.host_names.split(","))
-            # print a.show()
-            # print list(a)
-
-
 class BCloudSocketHandler(BaseSockJSConnection):
     channel = None
 
     @event
     def open(self, request):
-        # self._ssh = paramiko.SSHCl ient()
-        # self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         print "open"
         _ssh = paramiko.SSHClient()
         _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -189,53 +178,37 @@ class BCloudSocketHandler(BaseSockJSConnection):
         )
 
         channel = self._ssh.invoke_shell('xterm')
-        channel.resize_pty(80, 60)
+        channel.resize_pty(80, 30)
         channel.setblocking(False)
         channel.settimeout(0.0)
 
-        channel.send("\r\n")
-
         self.channel = channel
-        gevent.spawn(self._forward_outbound, self.channel).start()
+        gevent.spawn(self._forward_outbound, self.channel).join()
+
+        return "\r\n连接成功\r\n"
 
     @event
     def data(self, msg):
+        self.channel.send(msg)
+        gevent.spawn(self._forward_outbound, self.channel).join()
 
-        data = json.loads(str(msg))
-        if 'data' in data:
-            _d = data['data']
-            self.channel.send(_d)
-            gevent.spawn(self._forward_outbound, self.channel).join()
+        '''
+        while True:
+            from gevent import select
+            readable, writeable, error = select.select([self.channel, ], [], [], 0.1)
+            if self.channel in readable:
+                try:
+                    x = self.channel.recv(1024)
+                    if len(x) == 0:
+                        print('\r\n*** EOF\r\n')
+                        break
+                    self.emit("data", x)
 
-            # gevent.spawn(self._forward_outbound, self.channel).join()
-
-            # print data['data']
-
-            # print self.channel.send_ready()
-            # print self.channel.fileno()
-            # print self.channel.recv_ready()
-            # print self.channel.exit_status_ready()
-
-            # while self.channel.recv_ready():
-            #     a = self.channel.recv(1024)
-            #     self._a += a
-            #     # self.emit("data", self._a)
-            #     # print a
-            #     # print self.channel.recv_ready(), '\n\n'
-            # else:
-            #     a = self.channel.recv(1024)
-            #     self._a += a
-            #     print repr(self._a)
-            #
-            #     # if self._a == "\r\n":
-            #     #     self.channel.send(data['data'])
-            #     # self.emit("data", self._a)
-            #     # self.emit("data", self._a)
-            #
-            #     self.emit("data", self._a)
-            #     self._a = ''
-            # print a
-            # print self.channel.recv_ready(), '\n\n'
+                except socket.timeout as e:
+                    print "error", e.message
+            else:
+                break
+        '''
 
     def execute(self, command, term='xterm'):
         """ Execute a command on the remote server
@@ -253,46 +226,14 @@ class BCloudSocketHandler(BaseSockJSConnection):
         self._bridge(channel)
         channel.close()
 
-    def shell(self, term='xterm'):
-        """ Start an interactive shell session
-
-        This method invokes a shell on the remote SSH server and proxies
-        traffic to/from both peers.
-
-        You must connect to a SSH server using ssh_connect()
-        prior to starting the session.
-        """
-        self.channel = self._ssh.invoke_shell(term)
-        self._bridge(self.channel)
-        self.channel.close()
-
-    def _bridge(self, channel):
-        """ Full-duplex bridge between a websocket and a SSH channel """
-        channel.setblocking(False)
-        channel.settimeout(0.0)
-        gevent.spawn(self._forward_outbound, channel)
-
-        # self.channel
-
-    def _forward_inbound(self, channel):
-        """ Forward inbound traffic (websockets -> ssh) """
-        try:
-            while not self.tasks.empty():
-                task = self.tasks.get()
-                gevent.sleep(0)
-                channel.send(task)
-        finally:
-            self.close()
-
     def _forward_outbound(self, channel):
 
         while True:
             from gevent import select
-            readable, writeable, error = select.select([channel, ], [], [], 0)
+            readable, writeable, error = select.select([channel, ], [], [], 0.1)
             if self.channel in readable:
                 try:
                     x = self.channel.recv(1024)
-                    print repr(x)
                     if len(x) == 0:
                         print('\r\n*** EOF\r\n')
                         break
@@ -303,63 +244,6 @@ class BCloudSocketHandler(BaseSockJSConnection):
             else:
                 print "接收完毕"
                 break
-
-
-                # self.close()
-
-        """ Forward outbound traffic (ssh -> websockets) """
-
-        # while True:
-        #     from gevent import select
-        #
-        #     print channel
-        #     readable, writeable, error = select.select([channel], [], [], 1)
-        #
-        #     print channel
-        #
-        #     if channel in readable:
-        #         try:
-        #             from paramiko.py3compat import u
-        #             x = u(channel.recv(1024))
-        #             if len(x) == 0:
-        #                 print('\r\n*** EOF\r\n')
-        #                 break
-        #             self.emit("data", x)
-        #         except socket.timeout:
-        #             print "timeout"
-        #             # if sys.stdin in readable:
-        #             #     inp = sys.stdin.readline()
-        #             #     chan.sendall(inp)
-        # data = ''
-        # try:
-        #     while True:
-        #         print channel
-        #         print channel.in_buffer
-        #         print channel.in_buffer._buffer
-        #         print "recv_ready", channel.recv_ready()
-        #
-        #         # if not channel.recv_ready():
-        #         #     raise
-        #
-        #         # data = channel.recv(1024)
-        #         wait_read(channel.fileno())
-        #         data = channel.recv(1024)
-        #         # data = channel.in_buffer.read(1024, 0)
-        #         print "recv success----------"
-        #         self.send("data," + data)
-        #
-        #         # if not channel.recv_ready():
-        #         #     break
-        #
-        #         # self.emit("data", data)
-        # except Exception as e:
-        #     print 'error', e.message, '\n\n'
-        #     # self._forward_outbound(self.channel)
-        #     # self._forward_outbound(self.channel)
-        #     # gevent.spawn(self._forward_outbound, self.channel).start()
-        # finally:
-        #     print repr(data)
-        #     print "recv ok\n\n"
 
     def open_ws(self,
                 hostname,

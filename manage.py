@@ -38,7 +38,7 @@ class Application(web.Application):
         from bcloud.handlers.project import ProjectsHandler
         handlers = [
             (r"/", MainHandler),
-            (r"/term1/(?P<tid>.*)", TermHandler),
+            (r"/terminal/(?P<tid>.*)", TermHandler),
             (r"/host", HostsHandler),
             (r"/host/(?P<hid>.*)", HostHandler),
             (r"/project", ProjectsHandler),

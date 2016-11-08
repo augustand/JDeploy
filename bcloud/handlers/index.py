@@ -30,6 +30,9 @@ class MainHandler(tornado.web.RequestHandler):
 
 class TermHandler(tornado.web.RequestHandler):
     def get(self, tid=None):
+        if 'map' in tid:
+            return
+
         with db_session:
             h = Host[tid]
             print h
