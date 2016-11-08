@@ -1,10 +1,9 @@
 import paramiko
 
 from gevent import monkey
+
 monkey.patch_all()
 
-from gevent import event
-from gevent import Greenlet
 
 def test():
     result = ""
@@ -56,6 +55,13 @@ def test():
             echo 123456 | sudo -S ls > /dev/null
 
             sudo ps
+
+            main(){
+                ls
+                ls
+                ps aux
+            }
+            main
             '''
 
         print repr(a)
@@ -107,6 +113,7 @@ class Remote(object):
         self.ssh.connect(host, port, username, password, timeout=3)
 
     def e(self, cmd):
+        print repr(cmd)
         stdin, stdout, stderr = self.ssh.exec_command(cmd)
         print stdout.read(), stderr.read()
 
@@ -114,18 +121,22 @@ class Remote(object):
 if __name__ == '__main__':
     r = Remote()
     r.conn("192.168.101.237", 22, "barry", "123456")
-    r.e("""
-    ls
-    pwd
-    echo 123456 | sudo -S sudo su
-    sudo ls
-    sudo service --status-all
-
-    ps -aux
-
-    """)
+    # r.e("""
+    # # ls
+    # # pwd
+    # # echo 123456 | sudo -S sudo su
+    # # sudo ls
+    # # sudo service --status-all
+    #
+    # main(){
+    #     # ls
+    #     # ls
+    #     ss
+    # }
+    # ss
+    # """)
 
     print "\n\n"
 
-    r.conn("localhost", 22, "barry", "zhaojie521")
-    r.e("ls")
+    # r.conn("localhost", 22, "barry", "zhaojie521")
+    r.e(u'ls\n/bin/ss\nmain')

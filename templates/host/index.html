@@ -45,9 +45,7 @@
 
             <div class="twelve wide stretched column">
 
-                {#                <div class="ui segment">#}
                 <button onclick="$('.ui.modal.host.add').modal('show');" class="ui green button">添加主机</button>
-                {#                </div>#}
 
                 {% for group,host in hosts %}
                 <div class="ui tab segment" data-tab="{{ group }}">
@@ -62,6 +60,7 @@
                             <th class="left aligned">删除</th>
                             <th class="left aligned">修改</th>
                             <th class="left aligned">复制</th>
+                            <th class="left aligned">enter</th>
                             </thead>
                             <tbody>
                             {% for h in host %}
@@ -85,6 +84,12 @@
                                     <button onclick="onCopy('/host/{{ h.get("id") }}');" class="ui pink button">
                                         复制
                                     </button>
+                                </td>
+
+                                <td class="left aligned">
+                                    <a href='/term1/{{ h.get("id") }}' class="ui pink button">
+                                        enter
+                                    </a>
                                 </td>
 
                             </tr>
@@ -188,8 +193,7 @@
         });
     }
 
-    function onUpdate(url, id) {
-        console.log(id);
+    function onUpdate(url) {
         $('.ui.modal.host.update').modal('show');
 
         $.ajax({
@@ -205,8 +209,6 @@
             }
         }).done(function () {
         });
-
-
         $('.ui.modal.host.update').attr("action", url);
     }
     function onUpdateSubmit() {
@@ -215,13 +217,13 @@
             url: $('.ui.modal.host.update').attr("action") + "?" + $('.ui.modal.host.update form').serialize(),
             context: document.body,
             success: function (data) {
-                console.log(data);
-                window.location.href = "/host"
-                $(this).addClass("done");
+                if (data == "ok") {
+                    console.log(data);
+                    window.location.href = "/host";
+                }
             }
         }).done(function () {
             $('.ui.modal.host.update').modal('hide')
-            $('.ui.modal.host.update').attr("action", disable);
         });
     }
 

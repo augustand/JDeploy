@@ -46,7 +46,6 @@ function SockJSWrap(sockjs_url) {
         if (typeof(func) == "function") {
             that._listeners[type + "_return"] = function (msg) {
                 func(msg);
-                delete that._listeners[type + "_return"];
             };
         }
         that.ws.send(type + "," + data);
@@ -79,3 +78,4 @@ function test() {
 }
 
 
+// delete that._listeners[type + "_return"];

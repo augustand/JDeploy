@@ -1,0 +1,76 @@
+{% extends "../base.html" %}
+
+{% block title %}Term{% end %}
+{% block header %}
+<style>
+    .terminal {
+        border: #000 solid 5px;
+        font-family: "Monaco", "DejaVu Sans Mono", "Liberation Mono", monospace;
+        font-size: 11px;
+        color: #f0f0f0;
+        background: #000;
+        width: auto;
+        box-shadow: rgba(0, 0, 0, 0.8) 2px 2px 20px;
+    }
+
+    .reverse-video {
+        color: #000;
+        background: #f0f0f0;
+    }
+</style>
+<script src="{{ static_url('sockjs/term.js') }}"></script>
+{% end %}
+
+{% block body %}
+
+{% module Sidebar() %}
+
+{% module Menubar() %}
+
+
+<div class="pusher">
+    <div class="ui hidden divider"></div>
+    <div class="ui hidden divider"></div>
+    <div class="ui hidden divider"></div>
+    <div class="ui hidden divider"></div>
+
+    <div class="ui container">
+        <div class="ui vertical stripe quote segment">
+            <div id="term">
+            </div>
+        </div>
+
+    </div>
+</div>
+<script type="application/javascript">
+    var ws = withSockJS("/term", function (ws) {
+        ws.on("open", function (msg) {
+            ws.emit("conn", JSON.stringify({
+                "hostname": "{{ h.ip }}",
+                "port": "{{ h.port }}",
+                "username": "{{ h.name }}",
+                "password": "{{ h.password }}"
+            }));
+
+            ws.term = new Terminal(80, 60, function (key) {
+                ws.emit("data", JSON.stringify({'data': key}));
+            });
+            ws.term.open();
+            $('.terminal').detach().appendTo('#term');
+            ws.term.resize(80, 30);
+
+            console.log("open");
+        }).on("error", function (msg) {
+            console.log(msg);
+            ws.term.write('Error: ' + msg + '\r\n');
+            console.log(msg);
+        }).on("close", function (msg) {
+            console.log(msg);
+            ws.term.write('Connection Reset By Peer');
+        }).on("data", function (msg) {
+            ws.term.write(msg);
+        });
+    });
+</script>
+
+{% end %}

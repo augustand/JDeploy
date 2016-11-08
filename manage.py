@@ -8,7 +8,8 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, parse_command_line
 from tornado.web import TemplateModule
 
-from bcloud.handlers.task import TaskHandler
+from bcloud.handlers.index import TermHandler
+from bcloud.handlers.task import TaskHandler, TasksHandler
 from bcloud.uimodule import EntryModule, SidebarModule, MenubarModule, FooterModule
 from plugins.config import config
 from plugins.db import db
@@ -25,7 +26,7 @@ class Application(web.Application):
         self.db = db
         self.config = config
 
-        from bcloud.handlers.host import HostHandler
+        from bcloud.handlers.host import HostHandler, HostsHandler
         from bcloud.handlers.index import MainHandler
 
         from bcloud.handlers.websocket import BCloudSocketHandler
@@ -34,17 +35,19 @@ class Application(web.Application):
         from bcloud.handlers.websocket import WSocketHandler
         from sockjs.tornado import SockJSRouter
 
+        from bcloud.handlers.project import ProjectsHandler
         handlers = [
             (r"/", MainHandler),
-            (r"/host", HostHandler),
-            (r"/host/(.*)", HostHandler),
-            (r"/project", ProjectHandler),
-            (r"/project/(.*)", ProjectHandler),
-            (r"/task/?", TaskHandler),
-            (r"/task/?(.*)", TaskHandler),
-            (r"/ws", BCloudSocketHandler),
+            (r"/term1/(?P<tid>.*)", TermHandler),
+            (r"/host", HostsHandler),
+            (r"/host/(?P<hid>.*)", HostHandler),
+            (r"/project", ProjectsHandler),
+            (r"/project/(?P<pid>.*)", ProjectHandler),
+            (r"/task", TasksHandler),
+            (r"/task/(?P<tid>.*)", TaskHandler),
         ]
         handlers += SockJSRouter(WSocketHandler, '/ws').urls
+        handlers += SockJSRouter(BCloudSocketHandler, '/term').urls
 
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

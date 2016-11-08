@@ -27,13 +27,14 @@ while True:
     readable, writeable, error = select.select([chan, sys.stdin, ], [], [], 1)
     if chan in readable:
         try:
-            x = u(chan.recv(1024))
+            x = chan.recv(1024)
             if len(x) == 0:
                 print('\r\n*** EOF\r\n')
                 break
             sys.stdout.write(x)
             sys.stdout.flush()
-        except socket.timeout:
+        except socket.timeout as e:
+            print e.message
             pass
     if sys.stdin in readable:
         inp = sys.stdin.readline()

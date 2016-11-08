@@ -4,6 +4,16 @@ from pony.orm import Required, PrimaryKey, Optional
 
 from plugins.db import db
 
+'''
+'nullable', 'is_required', 'is_discriminator', 'is_unique', 'is_part_of_unique_index', \
+                'is_pk', 'is_collection', 'is_relation', 'is_basic', 'is_string', 'is_volatile', 'is_implicit', \
+                'id', 'pk_offset', 'pk_columns_offset', 'py_type', 'sql_type', 'entity', 'name', \
+                'lazy', 'lazy_sql_cache', 'args', 'auto', 'default', 'reverse', 'composite_keys', \
+                'column', 'columns', 'col_paths', '_columns_checked', 'converters', 'kwargs', \
+                'cascade_delete', 'index', 'original_default', 'sql_default', 'py_check', 'hidden', \
+                'optimistic'
+'''
+
 
 class Host(db.Entity):
     _table_ = 'Host'
@@ -20,7 +30,7 @@ class Project(db.Entity):
     _table_ = 'Project'
 
     id = PrimaryKey(str)
-    name = Required(str)
+    name = Required(str, unique=True)
     sub_name = Optional(str)
     description = Optional(str)
     host_group = Optional(str)

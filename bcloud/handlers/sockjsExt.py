@@ -29,16 +29,17 @@ class BaseSockJSConnection(SockJSConnection):
         self.room = _p[1]
         self.name = _p[1] + "_" + _p[2]
         self.token = _p[3]
-
         gevent.spawn(self._events["open"], request).join()
 
     def on_message(self, msg):
         name, data = msg.split(',', 1)
 
         if name in self._events:
-            a = gevent.spawn(self._events[name], data)
-            a.join()
-            r_data = a.value
+            a = self._events[name](data)
+            # a = gevent.spawn(self._events[name], data)
+            # a.join()
+            # r_data = a.value
+            r_data = a
             if r_data:
                 self.emit(name + "_return", r_data)
 
@@ -46,7 +47,7 @@ class BaseSockJSConnection(SockJSConnection):
         gevent.spawn(self._events["close"]).join()
 
     def emit(self, name, data):
-        gevent.spawn(self.send, name + "_return," + data).join()
+        gevent.spawn(self.send, name + "," + data).join()
 
     @event
     def open(self, msg):

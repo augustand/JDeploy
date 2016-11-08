@@ -3,11 +3,13 @@
 
 import tornado.gen
 import tornado.web
+from pony.orm import db_session
 from tornado.escape import json_encode
+
+from bcloud.model import Host
 
 
 class MainHandler(tornado.web.RequestHandler):
-
     def get(self):
         self.render("homepage.html")
 
@@ -25,3 +27,10 @@ class MainHandler(tornado.web.RequestHandler):
         self.write(json_encode({'result': True}))
         self.finish()
 
+
+class TermHandler(tornado.web.RequestHandler):
+    def get(self, tid=None):
+        with db_session:
+            h = Host[tid]
+            print h
+            self.render("term/index.html", h=h)
