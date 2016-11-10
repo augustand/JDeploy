@@ -42,17 +42,15 @@ class RemoteTask(object):
 
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.ssh.connect(host, port, username, password, timeout=3)
+        self.ssh.connect(host, port, username, password, timeout=2)
 
-        # self.ssh.set_log_channel("jjjji")
-        # self.ssh.get_transport()
-
-        self.sshs.append((host, self.ssh))
+        self.sshs.append((host, password, self.ssh))
 
     def e(self, cmd):
         try:
-            for ip, ssh in self.sshs:
-                stdin, stdout, stderr = ssh.exec_command(cmd)
+            for ip, password, ssh in self.sshs:
+                _cmd = 'echo {} | sudo -S ls > /dev/null\n'.format(password) + cmd
+                stdin, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)
                 self.ws.emit("task_return", json_encode({
                     "name": ip,
                     "data": "error:\r\n" + stderr.read() + "\r\nstdout:\n" + stdout.read()
@@ -92,8 +90,6 @@ class WSocketHandler(BaseSockJSConnection):
     @event
     def task(self, msg):
         _d = json.loads(msg)
-        print _d
-
         with db_session:
             data = tablib.Dataset(
                 headers=["username", 'ip', 'port', "password", "id"]
@@ -111,8 +107,6 @@ class WSocketHandler(BaseSockJSConnection):
                 for t in Task
                 if t.name == _d.get("task") and t.project == _d.get("project")
             ).first()
-
-            print data.json
 
             rt = RemoteTask(self)
             rt.add_hosts(data.dict).e(task.replace("\r", ""))
@@ -163,8 +157,6 @@ class BCloudSocketHandler(BaseSockJSConnection):
 
     @event
     def conn(self, msg):
-        print msg
-
         data = json.loads(msg)
         self._ssh.connect(
             hostname=data.get("hostname", ""),
@@ -192,24 +184,6 @@ class BCloudSocketHandler(BaseSockJSConnection):
         self.channel.send(msg)
         gevent.spawn(self._forward_outbound, self.channel).join()
 
-        '''
-        while True:
-            from gevent import select
-            readable, writeable, error = select.select([self.channel, ], [], [], 0.1)
-            if self.channel in readable:
-                try:
-                    x = self.channel.recv(1024)
-                    if len(x) == 0:
-                        print('\r\n*** EOF\r\n')
-                        break
-                    self.emit("data", x)
-
-                except socket.timeout as e:
-                    print "error", e.message
-            else:
-                break
-        '''
-
     def execute(self, command, term='xterm'):
         """ Execute a command on the remote server
 
@@ -235,14 +209,12 @@ class BCloudSocketHandler(BaseSockJSConnection):
                 try:
                     x = self.channel.recv(1024)
                     if len(x) == 0:
-                        print('\r\n*** EOF\r\n')
                         break
                     self.emit("data", x)
 
                 except socket.timeout as e:
                     print e.message
             else:
-                print "接收完毕"
                 break
 
     def open_ws(self,

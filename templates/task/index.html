@@ -222,6 +222,32 @@
         }).done(function () {
         });
     }
+
+    function run_task(pname, ptask) {
+        console.log(ws._listeners);
+        ws.emit(
+                "task",
+                JSON.stringify({
+                    project: pname,
+                    task: ptask
+                }),
+                function (msg) {
+                    var data = JSON.parse(msg);
+
+                    console.log(msg);
+
+                    $title = '<div class="title"><i class="dropdown icon"></i>' + data.name + '</div>';
+                    $content = '<div class="content"><p class="transition hidden"><pre><code class="bash hljs">' +
+                            data.data +
+                            '</code></pre></p></div>'
+
+                    $(".ui.segment.taskMessage .ui.styled.fluid.accordion").append($title);
+                    $(".ui.segment.taskMessage .ui.styled.fluid.accordion").append($content);
+
+                    hljs.initHighlightingOnLoad();
+                }
+        );
+    }
 </script>
 {% end %}
 

@@ -20,6 +20,7 @@ chan.get_pty()
 # 激活器
 chan.invoke_shell()
 
+
 while True:
     # 监视用户输入和服务器返回数据
     # sys.stdin 处理用户输入
