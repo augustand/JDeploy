@@ -262,3 +262,110 @@ class BCloudSocketHandler(BaseSockJSConnection):
         except Exception as e:
             self.emit("error", e.message or str(e))
             raise
+
+
+class BCloudSocket1Handler(BaseSockJSConnection):
+    channel = None
+
+    @event
+    def open(self, request):
+        print "open"
+        _ssh = paramiko.SSHClient()
+        _ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._ssh = _ssh
+
+    def _load_private_key(self, private_key, passphrase=None):
+        """ Load a SSH private key (DSA or RSA) from a string
+
+        The private key may be encrypted. In that case, a passphrase
+        must be supplied.
+        """
+        key = None
+        last_exception = None
+        for pkey_class in (RSAKey, DSSKey):
+            try:
+                key = pkey_class.from_private_key(StringIO(private_key),
+                                                  passphrase)
+            except PasswordRequiredException as e:
+                # The key file is encrypted and no passphrase was provided.
+                # There's no point to continue trying
+                raise
+            except SSHException as e:
+                last_exception = e
+                continue
+            else:
+                break
+        if key is None and last_exception:
+            raise last_exception
+        return key
+
+    @event
+    def close(self):
+        """ Terminate a bridge session """
+
+        print "close\n\n"
+        self._ssh.close()
+        self.channel.close()
+
+    @event
+    def conn(self, msg):
+        data = json.loads(msg)
+        print data
+        self._ssh.connect(
+            hostname=data.get("hostname", ""),
+            port=int(data.get("port", "")),
+            username=data.get("username", ""),
+            password=data.get("password", ""),
+            pkey=None,
+            timeout=None,
+            allow_agent=None,
+            look_for_keys=False
+        )
+
+        channel = self._ssh.invoke_shell('xterm')
+        channel.resize_pty(80, 30)
+        channel.setblocking(False)
+        channel.settimeout(0.0)
+
+        self.channel = channel
+        gevent.spawn(self._forward_outbound, self.channel).join()
+
+        return "\r\n连接成功\r\n"
+
+    @event
+    def data(self, msg):
+        self.channel.send(msg)
+        gevent.spawn(self._forward_outbound, self.channel).join()
+
+    def execute(self, command, term='xterm'):
+        """ Execute a command on the remote server
+
+        This method will forward traffic from the websocket to the SSH server
+        and the other way around.
+
+        You must connect to a SSH server using ssh_connect()
+        prior to starting the session.
+        """
+        transport = self._ssh.get_transport()
+        channel = transport.open_session()
+        channel.get_pty(term)
+        channel.exec_command(command)
+        self._bridge(channel)
+        channel.close()
+
+    def _forward_outbound(self, channel):
+
+        while True:
+            from gevent import select
+            readable, writeable, error = select.select([channel, ], [], [], 0.1)
+            if self.channel in readable:
+                try:
+                    x = self.channel.recv(1024)
+                    if len(x) == 0:
+                        break
+                    self.emit("data", x)
+
+                except socket.timeout as e:
+                    print e.message
+            else:
+                break

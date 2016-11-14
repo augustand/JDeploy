@@ -37,3 +37,14 @@ class TermHandler(tornado.web.RequestHandler):
             h = Host[tid]
             print h
             self.render("term/index.html", h=h)
+
+
+class Term1Handler(tornado.web.RequestHandler):
+    def get(self, tid=None):
+        if 'map' in tid:
+            return
+
+        with db_session:
+            h = Host[tid]
+            print h
+            self.render("term1.html", h=h)
