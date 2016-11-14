@@ -8,6 +8,11 @@ from tornado import web
 from bcloud.model import Host
 
 
+class DockerHandle(web.RequestHandler):
+    def get(self, *args, **kwargs):
+        self.render("docker/index.html")
+
+
 class HostsHandler(web.RequestHandler):
     def _data(self, __data):
         __d = {}

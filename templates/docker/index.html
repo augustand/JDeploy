@@ -1,10 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "../base.html" %}
 
-</body>
-</html>
+{% block title %}home{% end %}
+
+
+{% block body %}
+
+{% module Sidebar() %}
+{% module Menubar() %}
+
+
+<div class="pusher">
+
+    <div class="ui vertical stripe quote segment">
+
+        <div class="ui container">
+            <div class="introduction">
+                <div class="ui hidden divider"></div>
+                <div class="ui hidden divider"></div>
+                <div class="ui hidden divider"></div>
+                <div class="ui hidden divider"></div>
+            </div>
+        </div>
+
+        hello
+
+    </div>
+</div>
+
+
+<script>
+</script>
+{% end %}
+

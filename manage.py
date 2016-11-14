@@ -8,6 +8,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, parse_command_line
 from tornado.web import TemplateModule
 
+from bcloud.handlers.host import DockerHandle
 from bcloud.handlers.index import TermHandler, Term1Handler
 from bcloud.handlers.task import TaskHandler, TasksHandler
 from bcloud.handlers.websocket import BCloudSocket1Handler
@@ -47,6 +48,8 @@ class Application(web.Application):
             (r"/project/(?P<pid>.*)", ProjectHandler),
             (r"/task", TasksHandler),
             (r"/task/(?P<tid>.*)", TaskHandler),
+
+            (r"/docker", DockerHandle),
         ]
         handlers += SockJSRouter(WSocketHandler, '/ws').urls
         handlers += SockJSRouter(BCloudSocketHandler, '/term').urls

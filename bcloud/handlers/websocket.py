@@ -8,6 +8,7 @@ from StringIO import StringIO
 import gevent
 import paramiko
 import tablib
+from gevent.pool import Pool
 from paramiko import DSSKey
 from paramiko import PasswordRequiredException
 from paramiko import RSAKey
@@ -46,16 +47,22 @@ class RemoteTask(object):
 
         self.sshs.append((host, password, self.ssh))
 
+    def __e(self, ip, password, ssh, cmd):
+        _cmd = ''
+        if 'sudo' in cmd:
+            _cmd = 'echo {} | sudo -S ls > /dev/null\nclear\n'.format(password) + cmd
+        else:
+            _cmd = cmd
+        stdin, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)
+        self.ws.emit("task_return", json_encode({
+            "name": ip,
+            "data": "error:\r\n" + stderr.read() + "\r\nstdout:\n" + stdout.read()
+        }))
+
     def e(self, cmd):
         try:
-            for ip, password, ssh in self.sshs:
-                _cmd = 'echo {} | sudo -S ls > /dev/null\n'.format(password) + cmd
-                stdin, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)
-                self.ws.emit("task_return", json_encode({
-                    "name": ip,
-                    "data": "error:\r\n" + stderr.read() + "\r\nstdout:\n" + stdout.read()
-                }))
-
+            p = Pool(10)
+            p.map(lambda h: self.__e(h[0], h[1], h[2], cmd), self.sshs)
         except Exception, e:
             print e
 
